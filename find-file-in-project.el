@@ -114,8 +114,8 @@ This overrides variable `ffip-project-root' when set.")
 
 (defun ffip-join-patterns ()
   "Turn `ffip-paterns' into a string that `find' can use."
-  (mapconcat (lambda (pat) (format "-name \"%s\"" pat))
-             ffip-patterns " -or "))
+  (mapconcat (lambda (pat) (format "%s" pat))
+             ffip-patterns "|"))
 
 (defun ffip-project-files ()
   "Return an alist of all filenames in the project and their path.
@@ -137,9 +137,12 @@ directory they are found in so that they are unique."
                   (add-to-list 'file-alist file-cons)
                   file-cons)))
             (split-string (shell-command-to-string
-                           (format "find %s -type f \\( %s \\) %s | head -n %s"
+                           (format "cd %s && git ls-files | grep -E \"(%s)$\" %s | head -n %s | sed 's/^/%s\\//'"
                                    root (ffip-join-patterns)
-                                   ffip-find-options ffip-limit))))))
+                                   ffip-find-options ffip-limit
+                                   (replace-regexp-in-string "/" "\\\\/" root)))))))
+
+
 
 ;;;###autoload
 (defun find-file-in-project ()
